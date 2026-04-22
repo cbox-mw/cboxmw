@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ny">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CBox | Premium Cinema Experience</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #050505; }
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .movie-gradient { background: linear-gradient(to top, #050505, transparent); }
+        .green-glow:hover { box-shadow: 0 0 20px rgba(34, 197, 94, 0.4); }
+    </style>
+</head>
+<body class="text-zinc-100 selection:bg-green-500 selection:text-black">
+
+    <nav class="sticky top-0 z-50 glass px-6 py-4 flex justify-between items-center">
+        <div class="flex items-center gap-2">
+            <div class="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
+                <i class="fas fa-box-open text-black font-bold"></i>
+            </div>
+            <span class="text-2xl font-extrabold tracking-tighter uppercase">CBox</span>
+        </div>
+
+        <div class="flex items-center gap-4">
+            <div class="hidden md:block text-right">
+                <p class="text-[10px] text-zinc-500 uppercase font-bold tracking-widest">Wallet Balance</p>
+                <p class="text-green-500 font-bold" id="balance">K0.00</p>
+            </div>
+            <button onclick="fundWallet()" class="bg-zinc-800 hover:bg-zinc-700 p-2 px-4 rounded-full text-sm font-semibold transition-all border border-zinc-700">
+                <i class="fas fa-plus text-green-500 mr-2"></i>Fund
+            </button>
+            <div class="w-10 h-10 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center cursor-pointer">
+                <i class="fas fa-user text-zinc-400"></i>
+            </div>
+        </div>
+    </nav>
+
+    <section class="relative h-[60vh] w-full overflow-hidden">
+        <img src="https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?auto=format&fit=crop&q=80&w=2070" 
+             class="absolute inset-0 w-full h-full object-cover opacity-50" alt="Hero">
+        <div class="absolute inset-0 movie-gradient"></div>
+        <div class="absolute bottom-10 left-6 md:left-12 max-w-2xl">
+            <span class="bg-green-500 text-black text-[10px] font-black px-2 py-1 rounded uppercase mb-4 inline-block">Trending Now</span>
+            <h1 class="text-5xl md:text-7xl font-extrabold mb-4 leading-tight">THE LAST<br><span class="text-green-500 text-stroke">WARRIOR</span></h1>
+            <p class="text-zinc-400 mb-6 line-clamp-2">Inside the world of CBox, experience movies like never before. High quality, low cost, and instant delivery to your wallet.</p>
+            <div class="flex gap-4">
+                <button class="bg-green-500 hover:bg-green-400 text-black px-8 py-3 rounded-xl font-bold transition-all transform active:scale-95">
+                    <i class="fas fa-play mr-2"></i>Watch Trailer
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <main class="px-6 py-12 max-w-7xl mx-auto">
+        <div class="flex justify-between items-end mb-10">
+            <div>
+                <h2 class="text-3xl font-bold">Latest Releases</h2>
+                <div class="h-1 w-12 bg-green-500 mt-2 rounded-full"></div>
+            </div>
+            <a href="#" class="text-zinc-500 hover:text-green-500 text-sm font-semibold uppercase tracking-widest transition-colors">See All <i class="fas fa-chevron-right ml-1"></i></a>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6" id="movie-list">
+            <div class="animate-pulse flex flex-col gap-4">
+                <div class="bg-zinc-800 h-64 rounded-2xl"></div>
+                <div class="bg-zinc-800 h-4 w-3/4 rounded"></div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="border-t border-zinc-900 px-6 py-12 mt-12 bg-[#080808]">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
+            <div class="text-center md:text-left">
+                <span class="text-2xl font-black text-green-500 tracking-tighter">CBox</span>
+                <p class="text-zinc-500 text-sm mt-2">© 2026 CBox Malawi. All rights reserved.</p>
+            </div>
+            <div class="flex gap-6 text-zinc-400 text-xl">
+                <a href="#" class="hover:text-green-500"><i class="fab fa-facebook"></i></a>
+                <a href="#" class="hover:text-green-500"><i class="fab fa-instagram"></i></a>
+                <a href="#" class="hover:text-green-500"><i class="fab fa-telegram"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // SUPABASE CONFIGURATION
+        const SUPABASE_URL = 'https://YOUR_PROJECT_ID.supabase.co';
+        const SUPABASE_KEY = 'YOUR_ANON_KEY';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        async function fetchMovies() {
+            const { data, error } = await supabase.from('films').select('*');
+            if (data) {
+                const list = document.getElementById('movie-list');
+                list.innerHTML = data.map(movie => `
+                    <div class="group relative bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-800 transition-all hover:border-green-500/50 green-glow">
+                        <div class="relative overflow-hidden aspect-[2/3]">
+                            <img src="${movie.poster_url}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" alt="${movie.title}">
+                            <div class="absolute top-3 right-3 glass px-2 py-1 rounded text-[10px] font-bold text-green-500">K${movie.price}</div>
+                        </div>
+                        <div class="p-4">
+                            <h3 class="font-bold text-sm truncate mb-3">${movie.title}</h3>
+                            <button onclick="buyMovie('${movie.id}', ${movie.price})" class="w-full bg-white text-black py-2 rounded-lg text-xs font-black uppercase tracking-tighter hover:bg-green-500 transition-colors">
+                                Buy Ticket
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function buyMovie(id, price) {
+            console.log("Buying movie:", id);
+            alert("Tikutsegula njira yolipirira K" + price);
+        }
+
+        function fundWallet() {
+            alert("Redirecting to PayChangu...");
+        }
+
+        fetchMovies();
+    </script>
+</body>
+</html>
