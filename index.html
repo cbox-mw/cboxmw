@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>CBox | Premium Cinema & Digital Movie Wallet</title>
+    <meta name="description" content="CBox is Malawi's leading digital cinema platform. Watch high-quality movies, manage your cinema wallet, and pay instantly with PayChangu.">
+    <meta name="keywords" content="CBox, Cinema, Movies Malawi, Digital Wallet, PayChangu, Watch Movies Online, CBox App">
+    <meta name="author" content="CBox Digital Team">
+    <link rel="canonical" href="https://cboxmw.moviescbox.workers.dev/">
+
+    <meta property="og:title" content="CBox | Your Digital Cinema Experience">
+    <meta property="og:description" content="Instant access to blockbusters. Top up your wallet and start watching.">
+    <meta property="og:image" content="logo.png">
+    <meta property="og:url" content="https://cboxmw.moviescbox.workers.dev/">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #050505; scroll-behavior: smooth; }
+        .glass { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(15px); border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+        .hero-gradient { background: radial-gradient(circle at 50% -20%, #14532d 0%, #050505 80%); }
+        .green-glow:hover { box-shadow: 0 0 25px rgba(34, 197, 94, 0.2); }
+        
+        /* Smooth Sidebar Animation */
+        #mobile-menu { transform: translateX(-100%); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        #mobile-menu.active { transform: translateX(0); }
+        .menu-overlay { opacity: 0; visibility: hidden; transition: 0.3s; }
+        .menu-overlay.show { opacity: 1; visibility: visible; background: rgba(0,0,0,0.8); }
+    </style>
+</head>
+<body class="text-zinc-100 selection:bg-green-500 selection:text-black">
+
+    <div id="overlay" class="fixed inset-0 z-[60] menu-overlay" onclick="toggleMenu()"></div>
+    <aside id="mobile-menu" class="fixed top-0 left-0 h-full w-80 bg-[#0a0a0a] z-[70] p-8 border-r border-zinc-800">
+        <div class="flex justify-between items-center mb-12">
+            <img src="logo.png" alt="CBox Logo" class="h-10">
+            <button onclick="toggleMenu()" class="text-zinc-500 hover:text-white transition">
+                <i class="fas fa-times text-2xl"></i>
+            </button>
+        </div>
+        <nav class="flex flex-col gap-8 text-lg font-semibold tracking-tight">
+            <a href="/" class="text-green-500"><i class="fas fa-home mr-4"></i>Home</a>
+            <a href="about.html" class="hover:text-green-400 transition"><i class="fas fa-info-circle mr-4"></i>About Us</a>
+            <a href="help.html" class="hover:text-green-400 transition"><i class="fas fa-question-circle mr-4"></i>Help Center</a>
+            <a href="contact.html" class="hover:text-green-400 transition"><i class="fas fa-headset mr-4"></i>Contact Support</a>
+            <hr class="border-zinc-800 my-4">
+            <a href="login.html" class="text-zinc-400 hover:text-white"><i class="fas fa-sign-in-alt mr-4"></i>Login</a>
+            <a href="register.html" class="text-zinc-400 hover:text-white"><i class="fas fa-user-plus mr-4"></i>Register Account</a>
+        </nav>
+    </aside>
+
+    <nav class="sticky top-0 z-50 glass px-6 py-4 flex justify-between items-center">
+        <div class="flex items-center gap-6">
+            <button onclick="toggleMenu()" class="lg:hidden text-2xl text-zinc-300">
+                <i class="fas fa-bars-staggered"></i>
+            </button>
+            <div class="flex items-center gap-3">
+                <img src="logo.png" alt="CBox" class="h-8">
+                <span class="text-2xl font-black tracking-tighter uppercase bg-clip-text text-transparent bg-gradient-to-r from-white to-zinc-500 hidden sm:block">CBox</span>
+            </div>
+        </div>
+
+        <div class="hidden lg:flex gap-10 text-sm font-bold uppercase tracking-widest text-zinc-500">
+            <a href="about.html" class="hover:text-green-500 transition">About</a>
+            <a href="help.html" class="hover:text-green-500 transition">Support</a>
+            <a href="login.html" class="hover:text-white transition">Login</a>
+        </div>
+
+        <div class="flex items-center gap-5">
+            <div class="hidden sm:block text-right">
+                <p class="text-[9px] text-zinc-500 uppercase font-black tracking-widest">Balance</p>
+                <p class="text-green-500 font-bold" id="balance">K0.00</p>
+            </div>
+            <a href="register.html" class="bg-green-500 hover:bg-green-400 text-black px-6 py-2.5 rounded-full text-xs font-black uppercase tracking-tighter transition-all transform active:scale-95 shadow-lg shadow-green-500/10">
+                Get Started
+            </a>
+            <a href="profile.html" class="w-10 h-10 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center hover:border-green-500 transition">
+                <i class="fas fa-user text-zinc-500"></i>
+            </a>
+        </div>
+    </nav>
+
+    <section class="relative h-[75vh] w-full overflow-hidden hero-gradient flex items-center px-6 md:px-16">
+        <div class="max-w-4xl z-10">
+            <div class="inline-flex items-center gap-3 mb-6 bg-green-500/10 border border-green-500/20 px-4 py-1.5 rounded-full">
+                <span class="relative flex h-2 w-2">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                </span>
+                <span class="text-green-500 font-bold text-[10px] uppercase tracking-widest">Live in Malawi</span>
+            </div>
+            <h1 class="text-6xl md:text-8xl font-black mb-6 leading-none tracking-tighter uppercase">
+                Next-Gen <br><span class="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-600 italic">Cinema.</span>
+            </h1>
+            <p class="text-zinc-400 text-lg md:text-xl mb-10 max-w-xl leading-relaxed">
+                Unlock a world of premium entertainment. High-definition blockbusters delivered instantly to your CBox account.
+            </p>
+            <div class="flex flex-wrap gap-5">
+                <button onclick="scrollToGrid()" class="bg-white text-black px-12 py-4 rounded-2xl font-black text-sm uppercase tracking-widest transition hover:bg-green-500 active:scale-95">
+                    Explore Movies
+                </button>
+                <button class="glass px-10 py-4 rounded-2xl font-black text-sm uppercase tracking-widest transition hover:bg-zinc-800 border border-zinc-700">
+                    <i class="fas fa-wallet mr-3 text-green-500"></i>Top Up
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <main id="main-content" class="px-6 py-24 max-w-7xl mx-auto">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-16 gap-6">
+            <div>
+                <h2 class="text-4xl font-black tracking-tight mb-2">New Releases</h2>
+                <p class="text-zinc-500 font-medium">Curated collection of the latest digital cinema.</p>
+            </div>
+            <div class="flex gap-3">
+                <button class="bg-zinc-900 border border-zinc-800 px-5 py-2.5 rounded-xl text-xs font-bold hover:text-green-500 transition">
+                    <i class="fas fa-sliders mr-2"></i>Filter
+                </button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-10" id="movie-list">
+            <div class="animate-pulse bg-zinc-900 h-96 rounded-[2.5rem]"></div>
+            <div class="animate-pulse bg-zinc-900 h-96 rounded-[2.5rem]"></div>
+            <div class="animate-pulse bg-zinc-900 h-96 rounded-[2.5rem]"></div>
+        </div>
+    </main>
+
+    <footer class="bg-[#080808] border-t border-zinc-900 pt-24 pb-12">
+        <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 mb-24">
+            <div class="space-y-8">
+                <div class="flex items-center gap-3">
+                    <img src="logo.png" alt="CBox" class="h-8">
+                    <span class="text-2xl font-black uppercase tracking-tighter">CBox</span>
+                </div>
+                <p class="text-zinc-500 text-sm leading-relaxed">
+                    Pioneering the future of digital cinema in Malawi. Experience quality storytelling at the touch of a button.
+                </p>
+                <div class="flex gap-5">
+                    <a href="#" class="w-12 h-12 rounded-2xl bg-zinc-900 flex items-center justify-center hover:text-green-500 transition border border-zinc-800"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="w-12 h-12 rounded-2xl bg-zinc-900 flex items-center justify-center hover:text-green-500 transition border border-zinc-800"><i class="fab fa-telegram"></i></a>
+                    <a href="#" class="w-12 h-12 rounded-2xl bg-zinc-900 flex items-center justify-center hover:text-green-500 transition border border-zinc-800"><i class="fab fa-whatsapp"></i></a>
+                </div>
+            </div>
+
+            <div>
+                <h4 class="font-bold mb-8 uppercase text-xs tracking-widest text-zinc-300">Platform</h4>
+                <ul class="text-zinc-500 text-sm space-y-5 font-medium">
+                    <li><a href="about.html" class="hover:text-green-500 transition">About CBox</a></li>
+                    <li><a href="login.html" class="hover:text-green-500 transition">User Login</a></li>
+                    <li><a href="register.html" class="hover:text-green-500 transition">Create Account</a></li>
+                    <li><a href="help.html" class="hover:text-green-500 transition">Help & Support</a></li>
+                </ul>
+            </div>
+
+            <div>
+                <h4 class="font-bold mb-8 uppercase text-xs tracking-widest text-zinc-300">Legal</h4>
+                <ul class="text-zinc-500 text-sm space-y-5 font-medium">
+                    <li><a href="#" class="hover:text-green-500 transition">Privacy Policy</a></li>
+                    <li><a href="#" class="hover:text-green-500 transition">Terms of Service</a></li>
+                    <li><a href="#" class="hover:text-green-500 transition">Refund Policy</a></li>
+                </ul>
+            </div>
+
+            <div class="space-y-6">
+                <h4 class="font-bold uppercase text-xs tracking-widest text-zinc-300">Find Us</h4>
+                <div class="rounded-3xl overflow-hidden border border-zinc-800 grayscale opacity-40 h-44 transition hover:opacity-80">
+                    <iframe 
+                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d124434.782012!2d33.722511!3d-13.9622!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x1921d33b26c9f7a7%3A0x6b77242c137021e1!2sLilongwe!5e0!3m2!1sen!2smw!4v1700000000000" 
+                        width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+                </div>
+                <p class="text-[10px] text-zinc-600 font-bold uppercase tracking-widest">Main Hub: Lilongwe, Malawi</p>
+            </div>
+        </div>
+
+        <div class="max-w-7xl mx-auto px-6 border-t border-zinc-900 pt-10 flex flex-col md:flex-row justify-between items-center text-zinc-600 text-[10px] font-black uppercase tracking-[0.3em] gap-4">
+            <p>© 2026 CBox Entertainment Corp.</p>
+            <div class="flex items-center gap-6">
+                <span>Secure Payments by PayChangu</span>
+                <span class="w-1 h-1 bg-zinc-800 rounded-full"></span>
+                <a href="#" class="hover:text-white transition">Status</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Supabase Initialization
+        const _supabase = window.supabase.createClient('https://YOUR_ID.supabase.co', 'YOUR_KEY');
+
+        // Toggle Sidebar Menu
+        function toggleMenu() {
+            document.getElementById('mobile-menu').classList.toggle('active');
+            document.getElementById('overlay').classList.toggle('show');
+        }
+
+        // Smooth Scroll to Grid
+        function scrollToGrid() {
+            document.getElementById('main-content').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Fetch Movies from Supabase
+        async function fetchMovies() {
+            const { data, error } = await _supabase.from('films').select('*');
+            const list = document.getElementById('movie-list');
+            if (data) {
+                list.innerHTML = data.map(movie => `
+                    <div class="group relative bg-zinc-900/40 rounded-[2.5rem] overflow-hidden border border-zinc-800/50 transition-all hover:border-green-500/50 hover:bg-zinc-900 green-glow">
+                        <div class="relative overflow-hidden aspect-[3/4]">
+                            <img src="${movie.poster_url}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="${movie.title}">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-80"></div>
+                            <div class="absolute top-5 right-5 glass px-3 py-1 rounded-full text-[10px] font-black text-green-500 border border-green-500/20 shadow-xl">
+                                K${movie.price}
+                            </div>
+                        </div>
+                        <div class="p-8">
+                            <h3 class="font-bold text-sm truncate mb-5 text-zinc-100 uppercase tracking-tight">${movie.title}</h3>
+                            <button onclick="buyMovie('${movie.id}')" class="w-full bg-white text-black py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-green-500 hover:text-black transition-all transform active:scale-95 shadow-lg">
+                                Buy Access
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function buyMovie(id) {
+            console.log("Movie ID Selected:", id);
+            alert("Redirecting to secure payment gateway...");
+        }
+
+        // Run fetch on load
+        fetchMovies();
+    </script>
+</body>
+</html>
