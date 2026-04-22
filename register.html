@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CBox | Create Your Cinema Account</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root { --primary-green: #22c55e; --dark-bg: #030704; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--dark-bg); overflow: hidden; }
+
+        /* Animated Cinematic Background */
+        .bg-cinema {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(0deg, var(--dark-bg) 20%, rgba(0,0,0,0.6) 100%), 
+                        url('https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?q=80&w=2070&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            z-index: -1;
+            animation: slowZoom 20s infinite alternate ease-in-out;
+        }
+
+        @keyframes slowZoom { from { transform: scale(1); } to { transform: scale(1.1); } }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Loading Animation pa Batani */
+        .btn-loading { pointer-events: none; opacity: 0.7; position: relative; color: transparent !important; }
+        .btn-loading::after {
+            content: ""; position: absolute; width: 20px; height: 20px;
+            top: 50%; left: 50%; margin: -10px 0 0 -10px;
+            border: 3px solid rgba(0,0,0,0.2); border-top-color: #000;
+            border-radius: 50%; animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Background Glow Loading Effect */
+        #page-loader {
+            position: fixed; top: 0; left: 0; width: 100%; height: 4px;
+            background: linear-gradient(90deg, transparent, var(--primary-green), transparent);
+            z-index: 1000; display: none; animation: loadingBar 1.5s infinite linear;
+        }
+        @keyframes loadingBar { from { left: -100%; } to { left: 100%; } }
+
+        input { background: rgba(0,0,0,0.4) !important; border: 1px solid rgba(255,255,255,0.05) !important; transition: 0.3s; color: white !important; }
+        input:focus { border-color: var(--primary-green) !important; box-shadow: 0 0 15px rgba(34, 197, 94, 0.1); outline: none; }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-6">
+
+    <div id="page-loader"></div>
+
+    <div class="bg-cinema"></div>
+
+    <div class="max-w-md w-full glass-card p-10 rounded-[2.5rem] relative overflow-hidden">
+        <div class="absolute -top-24 -right-24 w-48 h-48 bg-green-600/10 blur-[80px]"></div>
+
+        <div class="text-center mb-8 relative z-10">
+            <div class="w-14 h-14 bg-green-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-[0_0_30px_rgba(34,197,94,0.3)]">
+                <i class="fas fa-play text-black text-xl ml-1"></i>
+            </div>
+            <h1 class="text-3xl font-black tracking-tighter text-white">CBOX CINEMA</h1>
+            <p class="text-zinc-400 text-xs font-bold uppercase tracking-[0.2em] mt-1">Start your journey</p>
+        </div>
+
+        <form id="registerForm" class="space-y-5 relative z-10">
+            <div class="space-y-1">
+                <label class="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-2">Full Name</label>
+                <div class="relative">
+                    <i class="fas fa-user absolute left-4 top-1/2 -translate-y-1/2 text-zinc-600 text-sm"></i>
+                    <input type="text" id="fullname" class="w-full pl-11 p-4 rounded-2xl text-sm" placeholder="Moses Kondowe" required>
+                </div>
+            </div>
+
+            <div class="space-y-1">
+                <label class="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-2">Email Address</label>
+                <div class="relative">
+                    <i class="fas fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-zinc-600 text-sm"></i>
+                    <input type="email" id="email" class="w-full pl-11 p-4 rounded-2xl text-sm" placeholder="moses@cbox.mw" required>
+                </div>
+            </div>
+
+            <div class="space-y-1">
+                <label class="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-2">Create Password</label>
+                <div class="relative">
+                    <i class="fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-zinc-600 text-sm"></i>
+                    <input type="password" id="password" class="w-full pl-11 p-4 rounded-2xl text-sm" placeholder="••••••••••••" required>
+                </div>
+            </div>
+
+            <button type="submit" id="submitBtn" class="w-full bg-green-600 hover:bg-green-500 text-black font-black py-4 rounded-2xl transition transform active:scale-95 shadow-[0_15px_30px_-10px_rgba(34,197,94,0.4)] mt-4 text-xs uppercase tracking-widest">
+                CREATE MY ACCOUNT
+            </button>
+        </form>
+
+        <div class="mt-8 text-center relative z-10">
+            <p class="text-zinc-500 text-xs font-medium">Already have a ticket? <a href="login.html" class="text-green-500 font-black hover:underline ml-1">LOG IN</a></p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // Supabase Config (Dikirani ma keys anu)
+        const supabaseUrl = 'YOUR_SUPABASE_URL';
+        const supabaseKey = 'YOUR_SUPABASE_ANON_KEY';
+        // const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+        const form = document.getElementById('registerForm');
+        const btn = document.getElementById('submitBtn');
+        const loader = document.getElementById('page-loader');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // Start Loading State
+            btn.classList.add('btn-loading');
+            btn.disabled = true;
+            loader.style.display = 'block';
+
+            // Simulate Data Processing (Izi n'zoti tione animation, m'malo mwa izi mudzaika Supabase code)
+            setTimeout(() => {
+                const name = document.getElementById('fullname').value;
+                alert("Zikomo " + name + "! Account yanu yapangidwa. (Connect Supabase to finish)");
+                
+                // End Loading State
+                btn.classList.remove('btn-loading');
+                btn.disabled = false;
+                loader.style.display = 'none';
+                
+                // window.location.href = "index.html"; // Pitani ku Home
+            }, 3000);
+        });
+    </script>
+</body>
+</html>
