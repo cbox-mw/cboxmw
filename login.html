@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CBox | Secure Access</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        :root { --primary-green: #22c55e; --bg-dark: #050505; --error-red: #ff3333; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background-color: var(--bg-dark); 
+            color: white; 
+            margin: 0; 
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+        }
+
+        /* --- CUSTOM ALERT --- */
+        #customAlert {
+            position: fixed; top: -100px; left: 50%; transform: translateX(-50%);
+            width: 90%; max-width: 400px; background: rgba(255, 0, 0, 0.1);
+            backdrop-filter: blur(15px); border: 1px solid rgba(255, 51, 51, 0.3);
+            padding: 16px; border-radius: 12px; z-index: 9999;
+            display: flex; align-items: center; gap: 12px;
+            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        #customAlert.show { top: 20px; }
+        #customAlert.success { background: rgba(34, 197, 94, 0.1); border-color: var(--primary-green); }
+        #customAlert.success .alert-icon { color: var(--primary-green); }
+
+        .app-bg {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: radial-gradient(circle at top right, rgba(34, 197, 94, 0.12), transparent 50%), 
+                        radial-gradient(circle at bottom left, rgba(59, 130, 246, 0.08), transparent 50%),
+                        var(--bg-dark);
+            z-index: -1;
+        }
+
+        /* --- PROGRESS STEPS --- */
+        .step-circle {
+            width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 14px; font-weight: 800; background: #111; color: #555; border: 2px solid #222; transition: 0.4s;
+        }
+        .step-circle.active { background: rgba(34, 197, 94, 0.1); color: var(--primary-green); border-color: var(--primary-green); box-shadow: 0 0 15px rgba(34, 197, 94, 0.2); }
+        .step-circle.completed { background: var(--primary-green); color: black; border-color: var(--primary-green); }
+        
+        .step-line { flex: 1; height: 2px; background: #222; margin: 0 12px; border-radius: 2px; }
+        .step-line.active { background: var(--primary-green); }
+
+        /* --- INPUTS --- */
+        .input-group { position: relative; margin-bottom: 1rem; width: 100%; }
+        .app-input {
+            width: 100%; background: #0f0f0f; border: 1px solid #222;
+            padding: 1.2rem 1rem 1.2rem 3.5rem; border-radius: 1rem;
+            color: white; font-size: 0.95rem; outline: none; transition: 0.3s;
+        }
+        .app-input:focus { border-color: var(--primary-green); background: #141f16; }
+        .app-icon { position: absolute; left: 1.2rem; top: 50%; transform: translateY(-50%); color: #666; font-size: 1.1rem; }
+        .input-group:focus-within .app-icon { color: var(--primary-green); }
+
+        /* --- SCREENS --- */
+        .screen { display: none; animation: slideIn 0.4s ease forwards; }
+        .screen.active { display: block; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+        .app-btn {
+            width: 100%; background: var(--primary-green); color: black; font-weight: 800; padding: 1.1rem;
+            border-radius: 1rem; text-transform: uppercase; letter-spacing: 1px; font-size: 0.8rem;
+            display: flex; align-items: center; justify-content: center; transition: 0.2s; border: none;
+        }
+        .app-btn:active { transform: scale(0.98); opacity: 0.9; }
+        
+        .btn-loading { color: transparent !important; position: relative; pointer-events: none; }
+        .btn-loading::after {
+            content: ""; position: absolute; width: 20px; height: 20px; border: 3px solid rgba(0,0,0,0.2);
+            border-top-color: black; border-radius: 50%; animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .glass-card {
+            background: rgba(15, 15, 15, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 2rem;
+            padding: 2.5rem 2rem;
+            width: 100%;
+            max-width: 400px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="customAlert">
+        <i class="fas fa-exclamation-circle alert-icon" id="alertIcon"></i>
+        <span class="alert-msg" id="alertMsg">Error Message</span>
+    </div>
+
+    <div class="app-bg"></div>
+
+    <div class="glass-card">
+        <div class="text-center mb-8">
+            <h1 class="text-2xl font-black tracking-tighter text-white">CBOX</h1>
+            <p class="text-[9px] font-bold uppercase tracking-[0.3em] text-zinc-500 mt-1">Secure Terminal</p>
+        </div>
+
+        <div class="flex items-center justify-between mb-10 px-4">
+            <div class="flex flex-col items-center">
+                <div class="step-circle active" id="step1-circle">1</div>
+                <span class="text-[9px] mt-2 font-bold uppercase tracking-widest text-green-500" id="step1-label">Identity</span>
+            </div>
+            <div class="step-line" id="line1"></div>
+            <div class="flex flex-col items-center">
+                <div class="step-circle" id="step2-circle">2</div>
+                <span class="text-[9px] mt-2 font-bold uppercase tracking-widest text-zinc-600" id="step2-label">Access</span>
+            </div>
+        </div>
+
+        <div id="screen-login" class="screen active">
+            <h2 class="text-xl font-extrabold mb-1">Welcome Back</h2>
+            <p class="text-zinc-500 text-xs mb-8">Please sign in to your account.</p>
+
+            <form id="loginForm" class="space-y-1">
+                <div class="input-group">
+                    <i class="fas fa-envelope app-icon"></i>
+                    <input type="email" id="email" class="app-input" placeholder="Email Address" required>
+                </div>
+                <div class="input-group">
+                    <i class="fas fa-lock app-icon"></i>
+                    <input type="password" id="password" class="app-input" placeholder="Password" required>
+                </div>
+
+                <div class="text-right pb-4">
+                    <button type="button" onclick="showForgot()" class="text-[10px] font-bold text-zinc-500 hover:text-green-500 uppercase tracking-wider">Forgot Password?</button>
+                </div>
+
+                <button type="submit" id="btnLogin" class="app-btn">
+                    Sign In
+                </button>
+            </form>
+        </div>
+
+        <div id="screen-forgot" class="screen">
+            <h2 class="text-xl font-extrabold mb-1">Reset Password</h2>
+            <p class="text-zinc-500 text-xs mb-8">Enter your email to receive a reset link.</p>
+
+            <form id="forgotForm" class="space-y-4">
+                <div class="input-group">
+                    <i class="fas fa-envelope app-icon"></i>
+                    <input type="email" id="resetEmail" class="app-input" placeholder="Email Address" required>
+                </div>
+
+                <button type="submit" id="btnReset" class="app-btn">
+                    Send Link
+                </button>
+                
+                <button type="button" onclick="showLogin()" class="w-full text-[10px] font-bold text-zinc-600 hover:text-white uppercase tracking-[0.2em] mt-4">
+                    Back to Login
+                </button>
+            </form>
+        </div>
+
+        <div id="screen-finish" class="screen text-center py-6">
+            <div class="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-[0_0_40px_rgba(34,197,94,0.3)]">
+                <i class="fas fa-check text-black text-4xl"></i>
+            </div>
+            <h2 class="text-2xl font-black mb-2">ACCESS GRANTED</h2>
+            <p class="text-zinc-500 text-xs mb-8 leading-relaxed">Verification successful. Preparing your dashboard...</p>
+            <div class="w-8 h-8 border-2 border-green-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+        </div>
+
+        <div id="footer-box" class="text-center mt-10">
+            <p class="text-[10px] text-zinc-600 font-bold uppercase tracking-widest">
+                New to CBox? <a href="register.html" class="text-green-500 ml-1">Create Account</a>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // SUPABASE SETUP
+        const SUPABASE_URL = 'https://ahwxlcmgwkjaagkxsvip.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFod3hsY21nd2tqYWFna3hzdmlwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4NTE0NzMsImV4cCI6MjA5MjQyNzQ3M30.G9ayQBkn00F4fhrqKMsdYigDscN-B2-7zkyvj5Xbb8o';
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        function showAlert(msg, isSuccess = false) {
+            const box = document.getElementById('customAlert');
+            const icon = document.getElementById('alertIcon');
+            document.getElementById('alertMsg').innerText = msg;
+            
+            box.className = isSuccess ? 'show success' : 'show';
+            icon.className = isSuccess ? 'fas fa-check-circle alert-icon' : 'fas fa-exclamation-circle alert-icon';
+            
+            setTimeout(() => box.classList.remove('show'), 4000);
+        }
+
+        function showForgot() {
+            document.getElementById('screen-login').classList.remove('active');
+            document.getElementById('screen-forgot').classList.add('active');
+        }
+
+        function showLogin() {
+            document.getElementById('screen-forgot').classList.remove('active');
+            document.getElementById('screen-login').classList.add('active');
+        }
+
+        // --- LOGIN LOGIC ---
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btnLogin');
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            btn.classList.add('btn-loading');
+
+            const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
+
+            btn.classList.remove('btn-loading');
+
+            if (error) {
+                showAlert(error.message);
+                return;
+            }
+
+            // Move to Step 2: Finish
+            document.getElementById('screen-login').classList.remove('active');
+            document.getElementById('screen-finish').classList.add('active');
+            document.getElementById('footer-box').style.display = 'none';
+
+            // Update Progress UI
+            const c1 = document.getElementById('step1-circle');
+            c1.classList.replace('active', 'completed');
+            c1.innerHTML = '<i class="fas fa-check text-xs"></i>';
+            document.getElementById('step1-label').classList.replace('text-green-500', 'text-zinc-600');
+            
+            document.getElementById('line1').classList.add('active');
+            document.getElementById('step2-circle').classList.add('completed');
+            document.getElementById('step2-label').classList.replace('text-zinc-600', 'text-green-500');
+
+            setTimeout(() => { window.location.href = 'dashboard.html'; }, 2500);
+        });
+
+        // --- FORGOT PASSWORD LOGIC ---
+        document.getElementById('forgotForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btnReset');
+            const email = document.getElementById('resetEmail').value;
+
+            btn.classList.add('btn-loading');
+
+            const { error } = await _supabase.auth.resetPasswordForEmail(email);
+
+            btn.classList.remove('btn-loading');
+
+            if (error) {
+                showAlert(error.message);
+            } else {
+                showAlert("Reset link sent to your email!", true);
+                btn.innerText = "LINK SENT";
+                btn.style.background = "#111";
+                btn.style.color = "#22c55e";
+            }
+        });
+    </script>
+</body>
+</html>
