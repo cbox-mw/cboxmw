@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CBox | Executive Dashboard</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        :root { 
+            --primary: #22c55e; 
+            --bg-dark: #020617; 
+            --card-bg: rgba(15, 23, 42, 0.6);
+            --sidebar-w: 260px;
+        }
+
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background-color: var(--bg-dark); 
+            color: #f8fafc;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        /* --- DASHBOARD LAYOUT --- */
+        .sidebar {
+            width: var(--sidebar-w);
+            height: 100vh;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            position: fixed;
+            left: 0; top: 0;
+            z-index: 50;
+            transition: 0.3s;
+        }
+
+        .main-content {
+            margin-left: var(--sidebar-w);
+            padding: 2rem;
+            min-height: 100vh;
+            background: radial-gradient(circle at 50% 0%, rgba(34, 197, 94, 0.05), transparent 40%);
+        }
+
+        /* --- CARDS --- */
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 24px;
+            backdrop-filter: blur(10px);
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+            box-shadow: 0 10px 30px -10px rgba(34, 197, 94, 0.2);
+        }
+
+        /* --- NAV LINKS --- */
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            margin: 4px 16px;
+            border-radius: 12px;
+            color: #94a3b8;
+            font-weight: 500;
+            transition: 0.2s;
+        }
+        .nav-link:hover, .nav-link.active {
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--primary);
+        }
+
+        /* --- TOP HEADER --- */
+        .top-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .user-profile {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 6px 16px;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-logout {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 700;
+            transition: 0.2s;
+        }
+        .btn-logout:hover { background: #ef4444; color: white; }
+
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .main-content { margin-left: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="p-8">
+            <h1 class="text-2xl font-black text-white tracking-tighter">C<span class="text-green-500">BOX</span></h1>
+        </div>
+
+        <nav class="mt-4">
+            <a href="#" class="nav-link active">
+                <i class="fa-solid fa-house"></i>
+                <span>Overview</span>
+            </a>
+            <a href="#" class="nav-link">
+                <i class="fa-solid fa-chart-line"></i>
+                <span>Analytics</span>
+            </a>
+            <a href="#" class="nav-link">
+                <i class="fa-solid fa-wallet"></i>
+                <span>Payments</span>
+            </a>
+            <a href="#" class="nav-link">
+                <i class="fa-solid fa-gear"></i>
+                <span>Settings</span>
+            </a>
+        </nav>
+
+        <div class="absolute bottom-8 left-0 w-full px-6">
+            <button onclick="handleLogout()" class="btn-logout w-full">
+                <i class="fa-solid fa-right-from-bracket mr-2"></i> SIGN OUT
+            </button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="top-nav">
+            <div>
+                <h2 class="text-2xl font-bold">Welcome back, <span id="user-display" class="text-green-500">Developer</span>!</h2>
+                <p class="text-zinc-500 text-sm">Here's what's happening with your projects today.</p>
+            </div>
+            
+            <div class="user-profile">
+                <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center font-bold text-black">M</div>
+                <span id="user-email" class="text-sm font-medium opacity-80">loading...</span>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="stat-card">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="p-3 bg-green-500/10 rounded-xl text-green-500">
+                        <i class="fa-solid fa-users text-xl"></i>
+                    </div>
+                    <span class="text-green-500 text-xs font-bold">+12%</span>
+                </div>
+                <p class="text-zinc-500 text-xs font-bold uppercase tracking-wider">Total Users</p>
+                <h3 class="text-3xl font-bold mt-1">1,284</h3>
+            </div>
+
+            <div class="stat-card">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="p-3 bg-blue-500/10 rounded-xl text-blue-500">
+                        <i class="fa-solid fa-server text-xl"></i>
+                    </div>
+                    <span class="text-blue-500 text-xs font-bold">Stable</span>
+                </div>
+                <p class="text-zinc-500 text-xs font-bold uppercase tracking-wider">Server Status</p>
+                <h3 class="text-3xl font-bold mt-1">99.9%</h3>
+            </div>
+
+            <div class="stat-card">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="p-3 bg-purple-500/10 rounded-xl text-purple-500">
+                        <i class="fa-solid fa-bolt text-xl"></i>
+                    </div>
+                    <span class="text-purple-500 text-xs font-bold">Active</span>
+                </div>
+                <p class="text-zinc-500 text-xs font-bold uppercase tracking-wider">API Requests</p>
+                <h3 class="text-3xl font-bold mt-1">45.2k</h3>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-lg font-bold">Recent Transactions</h3>
+                <button class="text-xs font-bold text-green-500 hover:underline">VIEW ALL</button>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="text-zinc-500 text-xs font-bold uppercase border-b border-white/5">
+                            <th class="pb-4">User</th>
+                            <th class="pb-4">Status</th>
+                            <th class="pb-4">Amount</th>
+                            <th class="pb-4">Date</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-sm">
+                        <tr class="border-b border-white/5 hover:bg-white/2 transition">
+                            <td class="py-4 flex items-center gap-3">
+                                <div class="w-8 h-8 bg-zinc-800 rounded-full"></div>
+                                <span>Moses K.</span>
+                            </td>
+                            <td class="py-4"><span class="bg-green-500/10 text-green-500 px-2 py-1 rounded-md text-[10px] font-bold">SUCCESS</span></td>
+                            <td class="py-4 font-bold">K25,000</td>
+                            <td class="py-4 text-zinc-500">Apr 23, 2026</td>
+                        </tr>
+                        <tr class="border-b border-white/5 hover:bg-white/2 transition">
+                            <td class="py-4 flex items-center gap-3">
+                                <div class="w-8 h-8 bg-zinc-800 rounded-full"></div>
+                                <span>John Phiri</span>
+                            </td>
+                            <td class="py-4"><span class="bg-yellow-500/10 text-yellow-500 px-2 py-1 rounded-md text-[10px] font-bold">PENDING</span></td>
+                            <td class="py-4 font-bold">K12,500</td>
+                            <td class="py-4 text-zinc-500">Apr 22, 2026</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const SUPABASE_URL = 'https://ahwxlcmgwkjaagkxsvip.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFod3hsY21nd2tqYWFna3hzdmlwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4NTE0NzMsImV4cCI6MjA5MjQyNzQ3M30.G9ayQBkn00F4fhrqKMsdYigDscN-B2-7zkyvj5Xbb8o';
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // --- AUTH CHECK ---
+        async function checkUser() {
+            const { data: { user } } = await _supabase.auth.getUser();
+            
+            if (!user) {
+                // Redirect ngati sali logged in
+                window.location.href = 'register.html';
+                return;
+            }
+
+            // Lowetsani zambiri za user
+            document.getElementById('user-email').innerText = user.email;
+            const username = user.user_metadata.username || 'Developer';
+            document.getElementById('user-display').innerText = username;
+        }
+
+        // --- LOGOUT ---
+        async function handleLogout() {
+            const { error } = await _supabase.auth.signOut();
+            if (!error) window.location.href = 'register.html';
+        }
+
+        // Yambitsani cheke
+        checkUser();
+    </script>
+</body>
+</html>
