@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CBox | Secure Login</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        :root { 
+            --primary: #22c55e; 
+            --primary-dark: #16a34a;
+            --bg-dark: #050505; 
+            --card-bg: rgba(20, 20, 20, 0.7);
+        }
+
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background-color: var(--bg-dark); 
+            color: white; 
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        /* --- BACKGROUND ANIMATION (Yofanana ndi Register) --- */
+        .orb {
+            position: fixed;
+            width: 350px;
+            height: 350px;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: -1;
+            opacity: 0.12;
+            animation: move 25s infinite alternate;
+        }
+        .orb-1 { background: var(--primary); top: -100px; left: -50px; }
+        .orb-2 { background: #3b82f6; bottom: -100px; right: -50px; animation-delay: -7s; }
+
+        @keyframes move {
+            from { transform: translate(0, 0); }
+            to { transform: translate(120px, 150px); }
+        }
+
+        .glass-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 28px;
+            padding: 45px 35px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.6);
+        }
+
+        .input-field {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 15px 15px 15px 48px;
+            border-radius: 14px;
+            color: white;
+            transition: 0.3s;
+            outline: none;
+        }
+        .input-field:focus {
+            border-color: var(--primary);
+            background: rgba(34, 197, 94, 0.05);
+            box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.1);
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #555;
+            transition: 0.3s;
+        }
+        .input-group:focus-within .input-icon { color: var(--primary); }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #000;
+            font-weight: 800;
+            padding: 15px;
+            border-radius: 14px;
+            width: 100%;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            letter-spacing: 1px;
+        }
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 24px rgba(34, 197, 94, 0.25);
+        }
+
+        #alert {
+            position: fixed; top: 25px; left: 50%; transform: translateX(-50%) translateY(-120px);
+            padding: 14px 28px; border-radius: 12px; font-weight: 700; z-index: 1000;
+            transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex; align-items: center; gap: 10px;
+        }
+        #alert.show { transform: translateX(-50%) translateY(0); }
+        .alert-error { background: #ff4444; color: white; }
+        .alert-success { background: var(--primary); color: black; }
+
+        .screen { display: none; animation: slideUp 0.5s ease; }
+        .screen.active { display: block; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .forgot-link {
+            font-size: 13px;
+            color: #94a3b8;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+        .forgot-link:hover { color: var(--primary); }
+    </style>
+</head>
+<body>
+
+    <div id="alert" class="alert-error">Message here</div>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <div class="glass-card">
+        <div class="text-center mb-10">
+            <h1 class="text-3xl font-black text-white tracking-tighter">C<span class="text-green-500">BOX</span></h1>
+            <p class="text-zinc-500 text-[10px] font-extrabold uppercase tracking-[0.2em] mt-1">Access Terminal</p>
+        </div>
+
+        <div id="login-screen" class="screen active">
+            <h2 class="text-xl font-bold mb-2">Takulandirani!</h2>
+            <p class="text-zinc-400 text-sm mb-8">Lowani kuti mupitilize mu CBox.</p>
+
+            <form id="loginForm" class="space-y-4">
+                <div class="input-group relative">
+                    <i class="fa-solid fa-envelope input-icon"></i>
+                    <input type="email" id="email" class="input-field" placeholder="Email Address" required>
+                </div>
+                <div class="input-group relative">
+                    <i class="fa-solid fa-lock input-icon"></i>
+                    <input type="password" id="password" class="input-field" placeholder="Password" required>
+                </div>
+                
+                <div class="flex justify-end">
+                    <button type="button" onclick="toggleScreens('forgot-screen')" class="forgot-link">Mwayiwala Password?</button>
+                </div>
+
+                <button type="submit" id="btnLogin" class="btn-primary mt-4">
+                    <span>LOWANI PANO</span>
+                    <i class="fa-solid fa-right-to-bracket text-xs"></i>
+                </button>
+            </form>
+        </div>
+
+        <div id="forgot-screen" class="screen">
+            <h2 class="text-xl font-bold mb-2">Reset Password</h2>
+            <p class="text-zinc-400 text-sm mb-8">Tipatseni imelo yanu kuti tikutumizireni reset link.</p>
+
+            <form id="forgotForm" class="space-y-6">
+                <div class="input-group relative">
+                    <i class="fa-solid fa-envelope input-icon"></i>
+                    <input type="email" id="resetEmail" class="input-field" placeholder="Email Address" required>
+                </div>
+
+                <button type="submit" id="btnReset" class="btn-primary">
+                    <span>TUMIZANI LINK</span>
+                </button>
+                
+                <button type="button" onclick="toggleScreens('login-screen')" class="w-full text-zinc-500 text-xs font-bold uppercase tracking-widest hover:text-white transition">
+                    Bwererani ku Login
+                </button>
+            </form>
+        </div>
+
+        <div id="auth-footer" class="text-center mt-10">
+            <p class="text-xs text-zinc-500 font-bold uppercase tracking-widest">
+                Mulibe account? <a href="register.html" class="text-green-500 ml-1 hover:underline">Register</a>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // --- SUPABASE SETUP (User provided keys) ---
+        const SUPABASE_URL = 'https://ahwxlcmgwkjaagkxsvip.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFod3hsY21nd2tqYWFna3hzdmlwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4NTE0NzMsImV4cCI6MjA5MjQyNzQ3M30.G9ayQBkn00F4fhrqKMsdYigDscN-B2-7zkyvj5Xbb8o';
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        function showAlert(msg, type = 'error') {
+            const el = document.getElementById('alert');
+            el.innerText = msg;
+            el.className = `alert-${type} show`;
+            el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), 5000);
+        }
+
+        function toggleScreens(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        // --- HANDLE LOGIN ---
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btnLogin');
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            btn.innerHTML = `<i class="fa-solid fa-circle-notch animate-spin"></i>`;
+            btn.disabled = true;
+
+            const { data, error } = await _supabase.auth.signInWithPassword({
+                email, password
+            });
+
+            if (error) {
+                showAlert(error.message, 'error');
+                btn.innerHTML = `<span>LOWANI PANO</span> <i class="fa-solid fa-right-to-bracket text-xs"></i>`;
+                btn.disabled = false;
+                return;
+            }
+
+            showAlert("Mwalowa bwinobwino!", "success");
+            setTimeout(() => { window.location.href = 'dashboard.html'; }, 1500);
+        });
+
+        // --- HANDLE FORGOT PASSWORD ---
+        document.getElementById('forgotForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btnReset');
+            const email = document.getElementById('resetEmail').value;
+
+            btn.innerHTML = `<i class="fa-solid fa-circle-notch animate-spin"></i>`;
+            btn.disabled = true;
+
+            const { error } = await _supabase.auth.resetPasswordForEmail(email);
+
+            if (error) {
+                showAlert(error.message, 'error');
+                btn.innerHTML = `<span>TUMIZANI LINK</span>`;
+                btn.disabled = false;
+                return;
+            }
+
+            showAlert("Reset link yatumizidwa ku imelo yanu!", "success");
+            btn.innerHTML = `<span>SENT ✅</span>`;
+        });
+    </script>
+</body>
+</html>
